@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, CheckSquare, ClipboardList, Home, LogOut, Settings, Share2, Sparkles, User } from "lucide-react"
+import { Calendar, CheckSquare, Home, LogOut, Settings, Share2, Sparkles, User } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {

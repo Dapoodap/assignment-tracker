@@ -60,7 +60,7 @@ export default function LandingPage() {
                   </div>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold">Today's Tasks</h3>
+                      <h3 className="text-lg font-semibold">Today&apos;s Tasks</h3>
                       <span className="text-sm text-gray-500">May 20, 2025</span>
                     </div>
                     <div className="space-y-4">
@@ -131,7 +131,7 @@ export default function LandingPage() {
               <h3 className="text-xl font-semibold mb-3">Task Sharing</h3>
               <p className="text-gray-600 dark:text-gray-400">
                 Easily share tasks with team members, friends, or family. Collaborate on projects and stay in sync with
-                everyone's progress.
+                everyone&apos;s progress.
               </p>
             </div>
 
