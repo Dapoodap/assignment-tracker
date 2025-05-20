@@ -6,10 +6,61 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String       @id @default(uuid())
+  email      String       @unique
+  name       String?
+  password   String
+  avatar     String?
+  tasks      Task[]       @relation("OwnedTasks")
+  sharedWith SharedTask[] @relation("ReceivedShares")
+
+  SharedTask SharedTask[] @relation("SentShares")
+}
+
+model Task {
+  id         String         @id @default(uuid())
+  title      String
+  content    Json           // rich text editor output
+  completed  Boolean        @default(false)
+  date       DateTime
+  priority   Priority       @default(medium)
+  category    Category @relation("CategoryTasks", fields: [categoryId], references: [id])
+  categoryId String
+  owner      User           @relation("OwnedTasks", fields: [ownerId], references: [id])
+  ownerId    String
+  sharedTo   SharedTask[]   @relation("TaskShares")
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model SharedTask {
+  id         String   @id @default(uuid())
+  task       Task     @relation("TaskShares", fields: [taskId], references: [id])
+  taskId     String
+  sharedTo   User     @relation("ReceivedShares", fields: [sharedToId], references: [id])
+  sharedToId String
+  sharedBy   User     @relation("SentShares", fields: [sharedById], references: [id])
+  sharedById String
+  createdAt  DateTime @default(now())
+}
+
+model Category {
+  id    String  @id @default(uuid())
+  name  String  @unique
+
+  Task Task[] @relation("CategoryTasks")
+}
+
+enum Priority {
+  low
+  medium
+  high
 }
