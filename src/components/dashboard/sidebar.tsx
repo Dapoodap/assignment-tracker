@@ -23,12 +23,21 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { signOut } from "next-auth/react"
 
 export function DashboardSidebar() {
   const pathname = usePathname()
 
   const isActive = (path: string) => {
     return pathname === path
+  }
+  const handleSignOut = async () => {
+    // Method 1: Using callbackUrl
+    await signOut({ callbackUrl: '/login' });
+    
+    // Method 2: If the above doesn't work, try this:
+    // await signOut();
+    // router.push('/login');
   }
 
   return (
@@ -110,9 +119,10 @@ export function DashboardSidebar() {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span 
+>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

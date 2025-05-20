@@ -1,49 +1,64 @@
-name: Deploy to Vercel
-
-on:
-  push:
-    branches:
-      - main
-      - dev
-      - prod
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma migrate deploy
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+name: Deploy to Vercel 
+ 
+on: 
+  push: 
+    branches: 
+      - main 
+      - dev 
+      - prod 
+ 
+jobs: 
+  deploy: 
+    runs-on: ubuntu-latest 
+ 
+    steps: 
+      - name: Checkout Repo 
+        uses: actions/checkout@v3 
+ 
+      - name: Setup Node.js 
+        uses: actions/setup-node@v3 
+        with: 
+          node-version: '18' 
+ 
+      - name: Cache node modules 
+        uses: actions/cache@v3 
+        with: 
+          path: ~/.npm 
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }} 
+          restore-keys: | 
+            ${{ runner.os }}-node- 
+ 
+      - name: Install dependencies 
+        run: npm ci 
+ 
+      # Generate Prisma client
+      - name: Generate Prisma Client
+        run: npx prisma generate
+ 
+      # Only run migrations if migrations directory exists and is not empty
+      - name: Check if migrations exist
+        id: check_migrations
         run: |
-          vercel build --prod --token=$VERCEL_TOKEN
+          if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations)" ]; then
+            echo "has_migrations=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_migrations=false" >> $GITHUB_OUTPUT
+          fi
+ 
+      - name: Run Prisma migrate deploy
+        if: steps.check_migrations.outputs.has_migrations == 'true'
+        env: 
+          DATABASE_URL: ${{ secrets.DATABASE_URL }} 
+        run: npx prisma migrate deploy
+ 
+      - name: Install Vercel CLI 
+        run: npm install -g vercel@latest 
+ 
+      - name: Deploy to Vercel 
+        env: 
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }} 
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }} 
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} 
+        run: | 
+          vercel build --prod --token=$VERCEL_TOKEN 
           vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
