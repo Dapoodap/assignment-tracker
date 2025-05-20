@@ -1,4 +1,4 @@
-"use client"    
+"use client"
 
 import { useState } from "react"
 import { format, subDays } from "date-fns"
@@ -14,7 +14,27 @@ export default function ActivityTracker() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [activities, setActivities] = useState<Activity[]>([
- 
+    {
+      id: "1",
+      date: format(subDays(new Date(), 2), "yyyy-MM-dd"),
+      title: "Fixed authentication bug",
+      content: "<p>Resolved the issue with user authentication timeout. The session was expiring too quickly.</p>",
+      category: "bugfix",
+    },
+    {
+      id: "2",
+      date: format(subDays(new Date(), 1), "yyyy-MM-dd"),
+      title: "Added new dashboard features",
+      content: "<p>Implemented the new analytics dashboard with interactive charts and filters.</p>",
+      category: "development",
+    },
+    {
+      id: "3",
+      date: format(new Date(), "yyyy-MM-dd"),
+      title: "Code review for payment integration",
+      content: "<p>Reviewed PR #123 for the new payment gateway integration. Suggested some security improvements.</p>",
+      category: "review",
+    },
   ])
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
   const [isCreating, setIsCreating] = useState(false)
