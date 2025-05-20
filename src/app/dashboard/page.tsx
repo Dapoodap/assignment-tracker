@@ -5,8 +5,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RecentTasks } from "@/components/dashboard/recent-tasks"
 import { SharedWithMe } from "@/components/dashboard/shared-with-me"
 import { UpcomingTasks } from "@/components/dashboard/upcoming-tasks"
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await auth();
+  
+  if (!session) {
+    redirect('/login');
+  }
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
