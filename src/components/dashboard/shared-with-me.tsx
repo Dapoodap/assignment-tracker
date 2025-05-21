@@ -1,30 +1,30 @@
 "use client"
 
-import { CheckCircle, Circle, MoreHorizontal } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useTaskStore } from "@/store/use-task-store"
-import { format, parseISO } from "date-fns"
+// import { CheckCircle, Circle, MoreHorizontal } from "lucide-react"
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+// import { Button } from "@/components/ui/button"
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuLabel,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu"
+// import { useTaskStore } from "@/store/use-task-store"
+// import {parseISO } from "date-fns"
 
 export function SharedWithMe() {
-  const { sharedTasks, toggleTaskCompletion } = useTaskStore()
+  // const { sharedTasks, toggleTaskCompletion } = useTaskStore()
 
   // Get the 5 most recent shared tasks
-  const recentSharedTasks = [...sharedTasks]
-    .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
-    .slice(0, 5)
+  // const recentSharedTasks = [...sharedTasks]
+  //   .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+  //   .slice(0, 5)
 
   return (
     <div className="space-y-4">
-      {recentSharedTasks.map((task) => (
+      {/* {recentSharedTasks.map((task) => (
         <div key={task.id} className="flex items-start justify-between">
           <div className="flex items-start space-x-3">
             <Button
@@ -91,7 +91,8 @@ export function SharedWithMe() {
         <div className="text-center py-4 text-muted-foreground">
           <p>No shared tasks found.</p>
         </div>
-      )}
+      )} */}
+      Coming Soon
     </div>
   )
 }

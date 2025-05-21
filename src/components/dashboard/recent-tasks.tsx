@@ -1,3 +1,4 @@
+ 
 "use client"
 
 import { CheckCircle, Circle, MoreHorizontal } from "lucide-react"
@@ -12,16 +13,20 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useTaskStore } from "@/store/use-task-store"
 import { format, parseISO } from "date-fns"
+import { TaskResponseDto } from "@/constant/types/dto/task.dto"
 
-export function RecentTasks() {
-  const { tasks, toggleTaskCompletion } = useTaskStore()
+export function RecentTasks(
+  {
+    data
+  }:{
+    data : TaskResponseDto[]
+  }
+) {
+  const { toggleTaskCompletion } = useTaskStore()
+  
 
   // Get the 5 most recent tasks
-  const recentTasks = [...tasks]
-    .sort((a, b) => {
-      return parseISO(b.date).getTime() - parseISO(a.date).getTime()
-    })
-    .slice(0, 5)
+  const recentTasks = data && data.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()).slice(0, 5)
 
   return (
     <div className="space-y-4">

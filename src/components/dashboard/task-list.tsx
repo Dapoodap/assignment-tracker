@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CheckCircle, Circle, MoreHorizontal, Plus, Search, Share2, Trash2, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,11 +39,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { TaskEditor } from "../ui/task-editor"
+import { useGetMyTasks } from "@/hooks/useTasks"
+import { CategoryResponse, TaskResponseDto } from "@/constant/types/dto/task.dto"
+import { useGetCategories } from "@/hooks/useCategory"
 
 export function TaskList() {
-  const { tasks, addTask, updateTask, deleteTask, toggleTaskCompletion, shareTask } = useTaskStore()
+  const { addTask, updateTask, deleteTask, toggleTaskCompletion, shareTask } = useTaskStore()
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [selectedCategory, setSelectedCategory] = useState<string | "all">("all")
+  const { data, isLoading } = useGetMyTasks()
+  const { data:categories, isLoading:iseLoadingCategories } = useGetCategories()
+
+  useEffect(()=>{
+    if(!isLoading && data){
+      console.log(data)
+    }
+  },[data,isLoading])
+
 
   // New task state
   const [newTask, setNewTask] = useState<Partial<Task>>({
@@ -101,16 +113,16 @@ export function TaskList() {
     }
   }
 
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = !isLoading && data.filter((task:TaskResponseDto) => {
     const matchesSearch =
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.content.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || task.category.toLowerCase() === selectedCategory.toLowerCase()
+    const matchesCategory = selectedCategory === "all" || task.category.name.toLowerCase() === selectedCategory.toLowerCase()
     return matchesSearch && matchesCategory
   })
 
-  const completedTasks = filteredTasks.filter((task) => task.completed)
-  const pendingTasks = filteredTasks.filter((task) => !task.completed)
+  const completedTasks = !isLoading && filteredTasks.filter((task:TaskResponseDto) => task.completed)
+  const pendingTasks = !isLoading && filteredTasks.filter((task:TaskResponseDto) => !task.completed)
 
   return (
     <div className="space-y-4">
@@ -130,8 +142,11 @@ export function TaskList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="work">Work</SelectItem>
-            <SelectItem value="personal">Personal</SelectItem>
+            {
+              !iseLoadingCategories && categories && categories.map((category:CategoryResponse) => (
+                <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
+              ))
+            }
           </SelectContent>
         </Select>
         <Dialog>
@@ -216,14 +231,17 @@ export function TaskList() {
       </div>
 
       <Tabs defaultValue="pending" className="space-y-4">
-        <TabsList>
+        {
+          isLoading ? <p>Loading...</p>  : <TabsList>
           <TabsTrigger value="pending">Pending ({pendingTasks.length})</TabsTrigger>
           <TabsTrigger value="completed">Completed ({completedTasks.length})</TabsTrigger>
         </TabsList>
+        }
+        
         <TabsContent value="pending" className="space-y-4">
-          {pendingTasks.length > 0 ? (
+          {isLoading ? <p>Loading...</p> : pendingTasks.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {pendingTasks.map((task) => (
+              {pendingTasks.map((task : TaskResponseDto) => (
                 <Card key={task.id}>
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
@@ -249,11 +267,13 @@ export function TaskList() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => setEditingTask(task)}>
+                           {/* onClick={() => setEditingTask(task)} */}
+                          <DropdownMenuItem>
                             <Edit className="mr-2 h-4 w-4" />
                             <span>Edit</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setSharingTask(task)}>
+                          {/* onClick={() => setSharingTask(task)} */}
+                          <DropdownMenuItem >
                             <Share2 className="mr-2 h-4 w-4" />
                             <span>Share</span>
                           </DropdownMenuItem>
@@ -273,7 +293,7 @@ export function TaskList() {
                     <div className="flex items-center justify-between w-full text-xs">
                       <span className="text-muted-foreground">{format(parseISO(task.date), "MMM d, yyyy")}</span>
                       <div className="flex items-center space-x-2">
-                        <span className="text-muted-foreground">{task.category}</span>
+                        <span className="text-muted-foreground">{task.category.name}</span>
                         <span
                           className={`px-2 py-0.5 rounded-full capitalize ${
                             task.priority === "high"
@@ -298,9 +318,9 @@ export function TaskList() {
           )}
         </TabsContent>
         <TabsContent value="completed" className="space-y-4">
-          {completedTasks.length > 0 ? (
+          {isLoading ? <p>Loading...</p> : completedTasks.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {completedTasks.map((task) => (
+              {completedTasks.map((task:TaskResponseDto) => (
                 <Card key={task.id} className="opacity-70">
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
@@ -309,7 +329,7 @@ export function TaskList() {
                           variant="ghost"
                           size="icon"
                           className="h-5 w-5 rounded-full p-0 text-muted-foreground"
-                          onClick={() => toggleTaskCompletion(task.id)}
+                          // onClick={() => toggleTaskCompletion(task.id)}
                         >
                           <CheckCircle className="h-5 w-5 text-primary" />
                           <span className="sr-only">Toggle task completion</span>
@@ -341,7 +361,7 @@ export function TaskList() {
                     <div className="flex items-center justify-between w-full text-xs">
                       <span className="text-muted-foreground">{format(parseISO(task.date), "MMM d, yyyy")}</span>
                       <div className="flex items-center space-x-2">
-                        <span className="text-muted-foreground">{task.category}</span>
+                        <span className="text-muted-foreground">{task.category.name}</span>
                         <span
                           className={`px-2 py-0.5 rounded-full capitalize ${
                             task.priority === "high"
