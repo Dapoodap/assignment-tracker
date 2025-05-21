@@ -2,15 +2,20 @@
 
 import { Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useTaskStore } from "@/store/use-task-store"
 import { format, isAfter, parseISO } from "date-fns"
+import { TaskResponseDto } from "@/constant/types/dto/task.dto"
 
-export function UpcomingTasks() {
-  const { tasks } = useTaskStore()
+export function UpcomingTasks({
+  tasks
+}:{
+  tasks : TaskResponseDto[]
+}
+) {
+  // const { tasks } = useTaskStore()
 
   // Get upcoming tasks (not completed and due in the future)
   const today = new Date()
-  const upcomingTasks = tasks
+  const upcomingTasks = tasks && tasks
     .filter((task) => !task.completed && isAfter(parseISO(task.date), today))
     .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime())
     .slice(0, 5)
