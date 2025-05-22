@@ -39,15 +39,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { TaskEditor } from "../ui/task-editor"
-import { useGetMyTasks } from "@/hooks/useTasks"
-import { CategoryResponse, TaskResponseDto } from "@/constant/types/dto/task.dto"
+import { useCreateTask, useGetMyTasks } from "@/hooks/useTasks"
+import { CategoryResponse, CreateTaskDto, TaskResponseDto } from "@/constant/types/dto/task.dto"
 import { useGetCategories } from "@/hooks/useCategory"
 
 export function TaskList() {
-  const { addTask, updateTask, deleteTask, toggleTaskCompletion, shareTask } = useTaskStore()
+  const {  updateTask, deleteTask, toggleTaskCompletion, shareTask } = useTaskStore()
   const [searchQuery, setSearchQuery] = useState("")
+  const [openModal, setOpenModal] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | "all">("all")
   const { data, isLoading } = useGetMyTasks()
+  const {  mutate,isPending} = useCreateTask()
   const { data:categories, isLoading:iseLoadingCategories } = useGetCategories()
 
   useEffect(()=>{
@@ -58,12 +60,12 @@ export function TaskList() {
 
 
   // New task state
-  const [newTask, setNewTask] = useState<Partial<Task>>({
+  const [newTask, setNewTask] = useState<Partial<CreateTaskDto>>({
     title: "",
     content: "<p></p>",
     date: format(new Date(), "yyyy-MM-dd"),
     priority: "medium",
-    category: "Work",
+    categoryId: "1",
     completed: false,
   })
 
@@ -77,17 +79,22 @@ export function TaskList() {
   // Delete task state
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null)
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (newTask.title && newTask.content) {
-      addTask(newTask as Omit<Task, "id">)
+      try {
+        mutate(newTask as CreateTaskDto)
+      } catch (error) {
+        console.log(error)
+      }
       setNewTask({
         title: "",
         content: "<p></p>",
         date: format(new Date(), "yyyy-MM-dd"),
         priority: "medium",
-        category: "Work",
+        categoryId: "1",
         completed: false,
       })
+      setOpenModal(false)
     }
   }
 
@@ -149,8 +156,8 @@ export function TaskList() {
             }
           </SelectContent>
         </Select>
-        <Dialog>
-          <DialogTrigger asChild>
+        <Dialog open={openModal} onOpenChange={setOpenModal}>
+          <DialogTrigger onClick={()=>setOpenModal(true)} asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               New Task
@@ -208,22 +215,24 @@ export function TaskList() {
               <div className="grid gap-2">
                 <Label htmlFor="category">Category</Label>
                 <Select
-                  value={newTask.category}
-                  onValueChange={(value: "Work" | "Personal") => setNewTask({ ...newTask, category: value })}
+                  value={newTask.categoryId}
+                  onValueChange={(value: "1" | "2") => setNewTask({ ...newTask, categoryId: value })}
                 >
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Work">Work</SelectItem>
-                    <SelectItem value="Personal">Personal</SelectItem>
+                    <SelectItem value="1">Work</SelectItem>
+                    <SelectItem value="2">Personal</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" onClick={handleAddTask}>
-                Create Task
+              <Button type="submit" onClick={handleAddTask} disabled={isPending}>
+                {
+                  isPending ? "Creating task" : "Create Task"
+                }
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -5,6 +5,8 @@ export interface CreateTaskDto {
   date: string // ISO
   priority: "low" | "medium" | "high"
   categoryId: string
+  completed: boolean
+
 }
 export interface CreateCategoryDto {
   name: string
