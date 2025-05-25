@@ -1,4 +1,4 @@
-import { CreateTaskDto } from '@/constant/types/dto/task.dto'
+import { CreateTaskDto, UpdateTaskDto } from '@/constant/types/dto/task.dto'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 
@@ -35,15 +35,48 @@ export const useCreateTask = () => {
   })
 }
 
-export const useUpdateTask = (id: string) => {
+export const useGetTaskById = (id: string) => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: Partial<CreateTaskDto>) => {
+    mutationFn: async () => {
+      const res = await axios.get(`/api/task/${id}`)
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my_tasks'] })
+    },
+  })
+}
+
+export interface UpdateTaskArgs {
+  id: string
+  data: Partial<UpdateTaskDto>
+}
+
+export const useUpdateTask = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, data }: UpdateTaskArgs) => {
       const res = await axios.put(`/api/task/${id}`, data)
       return res.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my_tasks'] })
+    },
+  })
+}
+export const useToggleCompletion = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({id,completed} : { id: string; completed: boolean }) => {
+      console.log(completed)
+      const res = await axios.put(`/api/task/${id}`, { isCompleted: !completed  })
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my_tasks_completed_toggle'] })
     },
   })
 }

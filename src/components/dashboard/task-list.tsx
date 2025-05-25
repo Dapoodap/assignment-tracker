@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CheckCircle, Circle, MoreHorizontal, Plus, Search, Share2, Trash2, Edit } from "lucide-react"
+import { CheckCircle, Circle, MoreHorizontal, Plus, Search, Share2, Trash2, Edit, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -39,18 +39,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { TaskEditor } from "../ui/task-editor"
-import { useCreateTask, useGetMyTasks } from "@/hooks/useTasks"
-import { CategoryResponse, CreateTaskDto, TaskResponseDto } from "@/constant/types/dto/task.dto"
+import {useCreateTask, useDeleteTask, useGetMyTasks, useUpdateTask } from "@/hooks/useTasks"
+import { CategoryResponse, CreateTaskDto, TaskResponseDto, UpdateTaskDto } from "@/constant/types/dto/task.dto"
 import { useGetCategories } from "@/hooks/useCategory"
 
 export function TaskList() {
-  const {  updateTask, deleteTask, toggleTaskCompletion, shareTask } = useTaskStore()
+  const { shareTask } = useTaskStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [openModal, setOpenModal] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | "all">("all")
   const { data, isLoading } = useGetMyTasks()
   const {  mutate,isPending} = useCreateTask()
   const { data:categories, isLoading:iseLoadingCategories } = useGetCategories()
+  const {mutate:deleteMutate } = useDeleteTask()
+  const {mutate:updateTask, isPending:isPendingUpdate } = useUpdateTask()
+  // const {mutate:toggleTaskCompletion } = useToggleCompletion()
 
   useEffect(()=>{
     if(!isLoading && data){
@@ -70,8 +73,8 @@ export function TaskList() {
   })
 
   // Edit task state
-  const [editingTask, setEditingTask] = useState<Task | null>(null)
-
+  const [editingTask, setEditingTask] = useState<UpdateTaskDto | null>(null)
+console.log(editingTask)
   // Share task state
   const [sharingTask, setSharingTask] = useState<Task | null>(null)
   const [recipient, setRecipient] = useState("")
@@ -98,10 +101,19 @@ export function TaskList() {
     }
   }
 
-  const handleUpdateTask = () => {
+  const handleUpdateTask = (id:string) => {
     if (editingTask && editingTask.title && editingTask.content) {
-      updateTask(editingTask.id, editingTask)
-      setEditingTask(null)
+      try {
+        updateTask({
+        id,
+        data : editingTask
+      })
+      } catch (error) {
+        alert(error)
+      }finally{
+              setEditingTask(null)
+
+      }
     }
   }
 
@@ -115,7 +127,7 @@ export function TaskList() {
 
   const handleDeleteTask = () => {
     if (deletingTaskId) {
-      deleteTask(deletingTaskId)
+      deleteMutate(deletingTaskId)
       setDeletingTaskId(null)
     }
   }
@@ -259,7 +271,14 @@ export function TaskList() {
                           variant="ghost"
                           size="icon"
                           className="h-5 w-5 rounded-full p-0 text-muted-foreground"
-                          onClick={() => toggleTaskCompletion(task.id)}
+                          onClick={() => updateTask({
+                            id: task.id,
+                            data: {
+      ...task,
+      completed: !task.completed,
+      priority: task.priority as "low" | "medium" | "high" | undefined,
+    }
+                          })}
                         >
                           <Circle className="h-5 w-5" />
                           <span className="sr-only">Toggle task completion</span>
@@ -276,8 +295,18 @@ export function TaskList() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                           {/* onClick={() => setEditingTask(task)} */}
-                          <DropdownMenuItem>
+                           
+                          <DropdownMenuItem  onClick={() => setEditingTask(
+                            {
+                              id: task.id,
+    title: task.title,
+    content: task.content,
+    categoryId: task.category.id,
+    priority: task.priority as "high" | "low" | "medium",
+    completed: task.completed,
+    date: task.date,
+}
+                          )}>
                             <Edit className="mr-2 h-4 w-4" />
                             <span>Edit</span>
                           </DropdownMenuItem>
@@ -338,7 +367,14 @@ export function TaskList() {
                           variant="ghost"
                           size="icon"
                           className="h-5 w-5 rounded-full p-0 text-muted-foreground"
-                          // onClick={() => toggleTaskCompletion(task.id)}
+                          onClick={() => updateTask({
+                            id: task.id,
+                            data: {
+      ...task,
+      completed: !task.completed,
+      priority: task.priority as "low" | "medium" | "high" | undefined,
+    }
+                          })}
                         >
                           <CheckCircle className="h-5 w-5 text-primary" />
                           <span className="sr-only">Toggle task completion</span>
@@ -399,6 +435,7 @@ export function TaskList() {
       {/* Edit Task Dialog */}
       {editingTask && (
         <Dialog open={!!editingTask} onOpenChange={(open) => !open && setEditingTask(null)}>
+          {/* {} */}
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Edit Task</DialogTitle>
@@ -417,7 +454,7 @@ export function TaskList() {
               <div className="grid gap-2">
                 <Label htmlFor="edit-description">Description</Label>
                 <TaskEditor
-                  content={editingTask.content}
+                  content={editingTask.content || ""}
                   onChange={(content) => setEditingTask({ ...editingTask, content })}
                 />
               </div>
@@ -427,7 +464,7 @@ export function TaskList() {
                   <Input
                     id="edit-date"
                     type="date"
-                    value={editingTask.date}
+  value={editingTask.date?.toString().slice(0, 10) || ''}
                     onChange={(e) => setEditingTask({ ...editingTask, date: e.target.value })}
                   />
                 </div>
@@ -453,22 +490,35 @@ export function TaskList() {
               <div className="grid gap-2">
                 <Label htmlFor="edit-category">Category</Label>
                 <Select
-                  value={editingTask.category}
-                  onValueChange={(value: "Work" | "Personal") => setEditingTask({ ...editingTask, category: value })}
-                >
-                  <SelectTrigger id="edit-category">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Work">Work</SelectItem>
-                    <SelectItem value="Personal">Personal</SelectItem>
-                  </SelectContent>
-                </Select>
+  value={editingTask.categoryId}
+  onValueChange={(value: string) => setEditingTask({ ...editingTask, categoryId: value })}
+>
+  <SelectTrigger id="edit-category">
+    <SelectValue placeholder="Select category" />
+  </SelectTrigger>
+  <SelectContent>
+    {
+      !iseLoadingCategories && categories && categories.map((category:CategoryResponse) => (
+        <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+      ))
+    }
+  </SelectContent>
+</Select>
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" onClick={handleUpdateTask}>
-                Save Changes
+              <Button type="submit" onClick={()=>{
+                handleUpdateTask(
+                editingTask?.id
+              )
+              }}>
+                {
+                  isPendingUpdate ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <p>Save Changes</p>
+                  )
+                }
               </Button>
             </DialogFooter>
           </DialogContent>

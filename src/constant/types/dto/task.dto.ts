@@ -27,3 +27,12 @@ export interface TaskResponseDto {
   createdAt: string
   updatedAt: string
 }
+export interface UpdateTaskDto {
+  id: string
+  title?: string
+  content?: string
+  date?: string | Date
+  priority?: "low" | "medium" | "high"
+  categoryId?: string
+  completed?: boolean
+}
