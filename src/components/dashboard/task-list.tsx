@@ -74,7 +74,6 @@ export function TaskList() {
 
   // Edit task state
   const [editingTask, setEditingTask] = useState<UpdateTaskDto | null>(null)
-console.log(editingTask)
   // Share task state
   const [sharingTask, setSharingTask] = useState<Task | null>(null)
   const [recipient, setRecipient] = useState("")
@@ -311,7 +310,7 @@ console.log(editingTask)
                             <span>Edit</span>
                           </DropdownMenuItem>
                           {/* onClick={() => setSharingTask(task)} */}
-                          <DropdownMenuItem >
+                          <DropdownMenuItem disabled >
                             <Share2 className="mr-2 h-4 w-4" />
                             <span>Share</span>
                           </DropdownMenuItem>
