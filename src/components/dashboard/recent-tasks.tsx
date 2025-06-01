@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
  
 "use client"
 
@@ -7,13 +8,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useTaskStore } from "@/store/use-task-store"
 import { format, parseISO } from "date-fns"
 import { TaskResponseDto } from "@/constant/types/dto/task.dto"
+import { useDeleteTask } from "@/hooks/useTasks"
+import { useState } from "react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog"
+import { useRouter } from "next/navigation"
 
 export function RecentTasks(
   {
@@ -23,7 +27,16 @@ export function RecentTasks(
   }
 ) {
   const { toggleTaskCompletion } = useTaskStore()
-  
+    const {mutate:deleteMutate } = useDeleteTask()
+    const router = useRouter()
+      const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null)
+    
+   const handleDeleteTask = () => {
+      if (deletingTaskId) {
+        deleteMutate(deletingTaskId)
+        setDeletingTaskId(null)
+      }
+    }
 
   // Get the 5 most recent tasks
   const recentTasks = data && data.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()).slice(0, 5)
@@ -75,12 +88,19 @@ export function RecentTasks(
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Edit</DropdownMenuItem>
+              {
+                !task.completed  && (
+                  <>
+                  <DropdownMenuItem onClick={()=>{
+                    router.push("/dashboard/tasks")
+                  }}>Edit</DropdownMenuItem>
               <DropdownMenuItem>Share</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                  </>
+                )
+              }
+              
+              <DropdownMenuItem onClick={() => setDeletingTaskId(task.id)} className="text-red-600">Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -90,6 +110,22 @@ export function RecentTasks(
           <p>No tasks found.</p>
         </div>
       )}
+            <AlertDialog open={!!deletingTaskId} onOpenChange={(open: any) => !open && setDeletingTaskId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the task.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTask} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

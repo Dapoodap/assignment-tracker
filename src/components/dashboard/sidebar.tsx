@@ -23,9 +23,12 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 
 export function DashboardSidebar() {
+  const { data: session, status } = useSession();
+
+ 
   const pathname = usePathname()
 
   const isActive = (path: string) => {
@@ -59,7 +62,7 @@ export function DashboardSidebar() {
             <span className="text-xl font-bold">TaskShare</span>
           </div>
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="p-4 space-y-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={isActive("/dashboard")}>
@@ -78,8 +81,8 @@ export function DashboardSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive("/dashboard/shared")}>
-                <Link href="/dashboard/shared">
+              <SidebarMenuButton disabled asChild isActive={isActive("/dashboard/shared")}>
+                <Link  href="/dashboard/shared">
                   <Share2 className="h-5 w-5" />
                   <span>Shared With Me</span>
                 </Link>
@@ -102,19 +105,19 @@ export function DashboardSidebar() {
               <Button variant="ghost" className="w-full justify-start px-2">
                 <Avatar className="h-6 w-6 mr-2">
                   <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarFallback>{status === 'authenticated' ? (session?.user?.email)?.[0].toUpperCase() : ''}</AvatarFallback>
                 </Avatar>
-                <span>User Name</span>
+                <span>{status === 'authenticated' ? session?.user?.email : ''}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
